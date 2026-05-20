@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>A Internet em Pedaços</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#fff8f0;font-family:'Nunito',sans-serif;touch-action:manipulation}
+.app{width:100vw;height:100vh;display:flex;flex-direction:column;overflow:hidden;position:relative}
+
+/* ── BARRA DE BOLINHAS ── */
+.progress-bar{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 16px;background:#fff;border-bottom:3px solid #ffe0b2}
+.pb-dot{width:16px;height:16px;border-radius:50%;background:#ffe0b2;border:3px solid #ffb74d;transition:all 0.3s ease;cursor:pointer}
+.pb-dot.done{background:#a5d6a7;border-color:#4caf50}
+.pb-dot.active{background:#ffb74d;border-color:#ff6f00;transform:scale(1.45);box-shadow:0 0 0 4px rgba(255,111,0,0.2)}
+.pb-sep{width:1px;height:16px;background:#ffe0b2;margin:0 2px}
+
+/* ── TELAS ── */
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;opacity:0;pointer-events:none;transition:opacity 0.35s ease,transform 0.35s ease;transform:scale(0.96)}
+.screen.active{opacity:1;pointer-events:all;transform:scale(1)}
+
+/* ── BOTÃO PRÓXIMO ── */
+.next-bar{flex-shrink:0;display:flex;justify-content:flex-end;align-items:center;padding:10px 16px 12px;max-width:500px;width:100%;margin:0 auto}
+.btn-next{background:#ff8f00;border:none;border-radius:50px;padding:13px 32px;font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:900;color:#fff;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(255,111,0,0.35);transition:all 0.15s ease;-webkit-user-select:none;user-select:none}
+.btn-next:active{transform:scale(0.93)}
+.btn-next.hidden{visibility:hidden}
+
+/* ── RODAPÉ ── */
+.footer{flex-shrink:0;height:22px;background:rgba(255,248,240,0.97);border-top:1px solid #ffcc80;display:flex;align-items:center;justify-content:center;font-size:0.62rem;color:#bf8040;font-style:italic;letter-spacing:0.04em}
+
+/* ── ANIMAÇÕES GLOBAIS ── */
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes pulse{0%,100%{opacity:0.5}50%{opacity:1}}
+@keyframes shake{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes pop{from{transform:scale(1) rotate(-4deg)}to{transform:scale(1.18) rotate(4deg)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes wrongf{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,111,0,0.5)}50%{box-shadow:0 0 0 8px rgba(255,111,0,0)}}
+
+/* ── HINT ── */
+.hint{font-size:0.88rem;font-weight:700;color:#e65100;text-align:center;animation:pulse 1.5s infinite;margin-top:4px}
+
+/* ════════ TELAS 0-7 (aprendizado) ════════ */
+
+/* TELA 0 */
+#screen-0{background:linear-gradient(160deg,#fff8f0,#fff3e0)}
+.t0-card{background:#fff;border:3px solid #ffcc80;border-radius:28px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:360px;width:100%;box-shadow:0 6px 28px rgba(0,0,0,0.09)}
+.t0-em{font-size:4.5rem;animation:bounce 2s infinite}
+.t0-title{font-size:1.5rem;font-weight:900;color:#e65100;text-align:center;line-height:1.3}
+.t0-sub{font-size:0.98rem;font-weight:700;color:#bf360c;text-align:center;line-height:1.5}
+
+/* TELA 1 */
+#screen-1{background:linear-gradient(160deg,#e3f2fd,#bbdefb)}
+.bubble{background:#fff;border-radius:20px;border:3px solid #42a5f5;padding:13px 18px;text-align:center;max-width:320px;font-size:0.95rem;font-weight:700;color:#1565c0;line-height:1.5}
+.bubble strong{color:#e65100;font-size:1.1rem}
+.t1-phone{font-size:5rem;animation:wiggle 3s infinite;cursor:pointer;transition:transform 0.1s;-webkit-user-select:none;user-select:none;display:block;margin:8px 0}
+.t1-phone:active{transform:scale(1.18)!important}
+
+/* TELA 2 */
+#screen-2{background:linear-gradient(160deg,#fce4ec,#f8bbd0)}
+.cut-wrap{width:270px;height:130px;position:relative;cursor:pointer;-webkit-user-select:none;user-select:none}
+.foto-whole{position:absolute;inset:0;background:linear-gradient(135deg,#ff8a65,#ffca28,#66bb6a,#42a5f5);border-radius:14px;border:3px solid #e91e63;display:flex;align-items:center;justify-content:center;font-size:2.8rem;transition:opacity 0.4s;box-shadow:0 4px 18px rgba(233,30,99,0.2)}
+.foto-pieces{position:absolute;inset:0;display:flex;gap:4px;opacity:0;transition:opacity 0.4s}
+.piece{flex:1;border-radius:9px;border:3px solid #e91e63;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.3)}
+.p1{background:#ff8a65}.p2{background:#ffca28;color:#5d4037}.p3{background:#66bb6a}.p4{background:#42a5f5}
+.scissors{font-size:2.2rem;position:absolute;top:-18px;left:-18px;transition:all 0.6s ease;pointer-events:none;display:none}
+.pkt-label{display:none;background:#fce4ec;border:3px solid #e91e63;border-radius:14px;padding:10px 16px;text-align:center;font-size:0.95rem;font-weight:900;color:#880e4f;margin-top:4px}
+
+/* TELA 3 */
+#screen-3{background:linear-gradient(160deg,#e8f5e9,#c8e6c9)}
+.pkt-card{background:#fff;border:3px solid #4caf50;border-radius:20px;padding:14px 18px;width:100%;max-width:320px;box-shadow:0 4px 14px rgba(76,175,80,0.15);cursor:pointer;transition:transform 0.15s;-webkit-user-select:none;user-select:none}
+.pkt-card:active{transform:scale(0.97)}
+.pkt-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:2px dashed #c8e6c9}
+.pkt-row:last-child{border-bottom:none}
+.pkt-ic{font-size:1.7rem;flex-shrink:0}
+.pkt-lbl{font-size:0.65rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:#558b2f;margin-bottom:2px}
+.pkt-val{font-size:0.95rem;font-weight:900;color:#1b5e20}
+.pkt-glow{display:none;background:rgba(76,175,80,0.1);border-radius:12px;padding:9px 14px;text-align:center;font-size:0.88rem;font-weight:700;color:#2e7d32;border:2px solid #a5d6a7;margin-top:4px}
+
+/* TELA 4 */
+#screen-4{background:linear-gradient(160deg,#ede7f6,#d1c4e9)}
+.road{width:100%;max-width:440px;height:92px;background:linear-gradient(90deg,#e8eaf6,#ede7f6);border-radius:16px;border:3px solid #9575cd;position:relative;overflow:hidden;cursor:pointer;-webkit-user-select:none;user-select:none}
+.road-line{position:absolute;top:50%;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,#9575cd 0,#9575cd 18px,transparent 18px,transparent 32px);transform:translateY(-50%)}
+.road-node{position:absolute;top:50%;transform:translateY(-50%);font-size:2rem}
+.road-node.src{left:8px}.road-node.dst{right:8px}
+.tpkt{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;color:#fff;border:2px solid rgba(255,255,255,0.5);left:-36px;transition:left 2s linear}
+.arrive-msg{display:none;background:#fff;border:3px solid #7e57c2;border-radius:14px;padding:10px 18px;text-align:center;font-size:0.95rem;font-weight:900;color:#4527a0;margin-top:8px}
+
+/* TELA 5 */
+#screen-5{background:linear-gradient(160deg,#fff3e0,#ffe0b2)}
+.lost-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.lpkt{width:60px;height:60px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:900;font-size:0.7rem;border:3px solid;cursor:pointer;transition:all 0.2s;-webkit-user-select:none;user-select:none}
+.lpkt:active{transform:scale(0.91)}
+.lp-ok{background:#e8f5e9;border-color:#4caf50;color:#1b5e20}
+.lp-lost{background:#fce4ec;border-color:#e91e63;color:#880e4f;animation:shake 0.5s infinite}
+.lost-msg{display:none;background:#fff;border:3px solid #ff6f00;border-radius:14px;padding:11px 16px;text-align:center;font-size:0.9rem;font-weight:700;color:#e65100;max-width:300px;line-height:1.5;margin-top:6px}
+
+/* TELA 6 */
+#screen-6{background:linear-gradient(160deg,#e0f7fa,#b2ebf2)}
+.slots-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.slot{width:54px;height:54px;border-radius:11px;border:3px dashed #0097a7;background:#e0f7fa;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:900;color:#0097a7;transition:all 0.3s}
+.slot.filled{border-style:solid;border-color:#00796b;background:#e0f2f1}
+.src-pkts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.src-pkt{width:54px;height:54px;border-radius:11px;border:3px solid #0097a7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:900;font-size:0.68rem;color:#fff;cursor:pointer;transition:all 0.2s;-webkit-user-select:none;user-select:none}
+.src-pkt:active{transform:scale(0.9)}
+.src-pkt.placed{opacity:0.25;pointer-events:none}
+.assembled-msg{display:none;background:#fff;border:3px solid #00897b;border-radius:14px;padding:12px 18px;text-align:center;font-size:1rem;font-weight:900;color:#004d40;margin-top:6px}
+
+/* TELA 7 */
+#screen-7{background:linear-gradient(160deg,#fff9c4,#fff59d)}
+.t7-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.firework{font-size:3.8rem;animation:pop 0.8s infinite alternate}
+.stars-row{display:flex;gap:8px;justify-content:center}
+.star{font-size:2.2rem;animation:spin 2s infinite linear}
+.star:nth-child(2){animation-delay:0.3s}.star:nth-child(3){animation-delay:0.6s}
+.congrats-title{font-size:1.7rem;font-weight:900;color:#e65100;line-height:1.3}
+.congrats-sub{font-size:1rem;font-weight:700;color:#bf360c;line-height:1.5;max-width:320px}
+
+/* ════════ TELAS DE AVALIAÇÃO (8,9,10) ════════ */
+.av-wrap{width:100%;max-width:480px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:2px 0}
+
+/* banner topo avaliação */
+.av-banner{display:flex;align-items:center;gap:8px;background:#fff;border-radius:30px;padding:6px 16px;border:3px solid #ffb74d;box-shadow:0 2px 10px rgba(255,152,0,0.15)}
+.av-star{font-size:1rem}
+.av-badge{font-size:0.83rem;font-weight:900;color:#e65100;letter-spacing:0.04em}
+.av-pts-badge{font-size:0.78rem;font-weight:900;color:#2e7d32;min-width:56px;text-align:right}
+
+/* pergunta */
+.av-question{background:#fff;border-radius:18px;border:3px solid #ffcc80;padding:11px 16px;text-align:center;width:100%;max-width:360px;box-shadow:0 3px 10px rgba(255,152,0,0.10)}
+.av-q-em{font-size:2rem;display:block;margin-bottom:3px}
+.av-q-text{font-size:0.95rem;font-weight:900;color:#bf360c;line-height:1.4;margin-bottom:3px}
+.av-q-hint{font-size:0.75rem;font-weight:700;color:#e65100;animation:pulse 1.5s infinite}
+
+/* feedback */
+.av-fb{min-height:44px;width:100%;max-width:360px;border-radius:14px;padding:9px 14px;font-size:0.9rem;font-weight:900;text-align:center;line-height:1.4;display:none}
+.av-fb.ok{display:block;background:#e8f5e9;border:3px solid #4caf50;color:#1b5e20}
+.av-fb.err{display:block;background:#fce4ec;border:3px solid #e91e63;color:#880e4f}
+
+/* ── AV1: ARRASTAR ── */
+#screen-8{background:linear-gradient(160deg,#fff3e0,#ffe0b2)}
+.drop-target{
+  width:120px;height:84px;border-radius:18px;
+  border:4px dashed #ff8f00;background:#fff8f0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:2.2rem;transition:all 0.22s;animation:glow 2s infinite;
+}
+.drop-target.over{border-color:#4caf50;background:#e8f5e9;transform:scale(1.07);animation:none}
+.drop-target.correct{border-color:#4caf50;background:#e8f5e9;border-style:solid;animation:none}
+.drop-target.wrong{border-color:#e91e63;background:#fce4ec;border-style:solid;animation:none}
+.drop-hint-lbl{font-size:0.68rem;font-weight:900;color:#ff8f00}
+.drag-opts{display:flex;flex-direction:column;gap:7px;width:100%;max-width:340px}
+.drag-opt{
+  display:flex;align-items:center;gap:11px;
+  background:#fff;border:3px solid #ffb74d;border-radius:13px;
+  padding:10px 14px;cursor:grab;
+  font-size:0.95rem;font-weight:700;color:#5d4037;
+  box-shadow:0 2px 8px rgba(0,0,0,0.07);
+  transition:transform 0.12s,box-shadow 0.12s;
+  -webkit-user-select:none;user-select:none;touch-action:none;
+}
+.drag-opt:active{transform:scale(1.04);box-shadow:0 5px 16px rgba(0,0,0,0.13)}
+.drag-opt.dragging{opacity:0.45;transform:rotate(3deg)}
+.drag-opt.used{opacity:0.25;pointer-events:none}
+.drag-em{font-size:1.5rem;flex-shrink:0}
+
+/* ── AV2: CLICAR (3 opções em cards grandes) ── */
+#screen-9{background:linear-gradient(160deg,#e8eaf6,#c5cae9)}
+.click-opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;width:100%;max-width:420px}
+.click-opt{
+  width:110px;min-height:108px;border-radius:20px;
+  background:#fff;border:3px solid #9575cd;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  cursor:pointer;transition:all 0.18s;padding:12px 8px;
+  -webkit-user-select:none;user-select:none;
+  box-shadow:0 3px 10px rgba(149,117,205,0.12);
+}
+.click-opt:active{transform:scale(0.91)}
+.click-opt.sel-ok{background:#e8f5e9;border-color:#4caf50;border-width:4px;transform:scale(1.05)}
+.click-opt.sel-err{background:#fce4ec;border-color:#e91e63;border-width:4px}
+.click-opt.disabled{pointer-events:none}
+.co-em{font-size:2.3rem}
+.co-lbl{font-size:0.7rem;font-weight:900;color:#4527a0;text-align:center;line-height:1.3}
+
+/* ── AV3: SEQUÊNCIA (arrastar para a ordem certa) ── */
+#screen-10{background:linear-gradient(160deg,#e0f2f1,#b2dfdb)}
+.seq-scene{width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.seq-slots{display:flex;gap:10px;justify-content:center;width:100%;margin-bottom:4px}
+.seq-slot{
+  width:80px;height:80px;border-radius:14px;
+  border:3px dashed #0097a7;background:#e0f7fa;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  transition:all 0.2s;font-size:0.68rem;font-weight:900;color:#0097a7;
+}
+.seq-slot.over{border-color:#ff6f00;background:#fff3e0;border-style:solid;transform:scale(1.07)}
+.seq-slot.placed{border-style:solid;border-color:#00796b;background:#e0f2f1}
+.seq-slot-num{font-size:0.65rem;opacity:0.55}
+.seq-sources{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;width:100%}
+.seq-item{
+  width:76px;height:76px;border-radius:13px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  border:3px solid;font-weight:900;font-size:0.7rem;
+  cursor:grab;-webkit-user-select:none;user-select:none;touch-action:none;
+  transition:transform 0.15s,box-shadow 0.15s;
+  box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+.seq-item:active{transform:scale(1.07)!important;box-shadow:0 6px 18px rgba(0,0,0,0.18)}
+.seq-item.dragging{opacity:0.4;transform:rotate(4deg)}
+.seq-item.used{opacity:0.2;pointer-events:none}
+.seq-em{font-size:1.8rem;display:block}
+.seq-lbl{font-size:0.62rem;text-align:center;line-height:1.3;padding:0 2px}
+
+/* ── TELA 11: RESULTADO ── */
+#screen-11{background:linear-gradient(160deg,#fff9c4,#fff59d)}
+.result-wrap{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:12px;padding:4px 0}
+.result-nota-card{background:#fff;border-radius:22px;padding:18px 28px;border:4px solid;text-align:center;box-shadow:0 6px 22px rgba(0,0,0,0.11);min-width:160px}
+.result-nota{font-size:4rem;font-weight:900;line-height:1}
+.result-over{font-size:1rem;font-weight:700;color:#888;margin-top:1px}
+.result-stars{font-size:2rem;letter-spacing:4px;margin:4px 0}
+.result-msg{font-size:1.05rem;font-weight:900;text-align:center;line-height:1.4;max-width:300px}
+.result-cards{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%;max-width:350px}
+.rc{flex:1;min-width:80px;max-width:100px;background:#fff;border-radius:13px;border:3px solid;padding:9px 5px;text-align:center;box-shadow:0 2px 7px rgba(0,0,0,0.07)}
+.rc-em{font-size:1.4rem;margin-bottom:3px}
+.rc-lbl{font-size:0.6rem;font-weight:900;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px}
+.rc-val{font-size:1.2rem;font-weight:900}
+.rc-ok{border-color:#4caf50}.rc-ok .rc-lbl{color:#388e3c}.rc-ok .rc-val{color:#1b5e20}
+.rc-err{border-color:#e91e63}.rc-err .rc-lbl{color:#c2185b}.rc-err .rc-val{color:#880e4f}
+.rc-nota{border-color:#ff8f00}.rc-nota .rc-lbl{color:#e65100}
+.btn-retry{background:#ff8f00;border:none;border-radius:50px;padding:12px 30px;font-family:'Nunito',sans-serif;font-size:0.98rem;font-weight:900;color:#fff;cursor:pointer;box-shadow:0 4px 13px rgba(255,111,0,0.3);transition:transform 0.13s}
+.btn-retry:active{transform:scale(0.93)}
+
+/* MEDIADOR */
+.med-btn{position:fixed;bottom:58px;right:14px;z-index:100;width:44px;height:44px;border-radius:50%;background:#5c6bc0;border:none;display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;box-shadow:0 3px 12px rgba(92,107,192,0.4);transition:transform 0.13s}
+.med-btn:active{transform:scale(0.9)}
+.med-panel{position:fixed;bottom:110px;right:14px;z-index:99;background:#3949ab;color:#fff;border-radius:14px;padding:12px 14px;max-width:240px;font-size:0.78rem;font-weight:700;line-height:1.6;box-shadow:0 4px 18px rgba(0,0,0,0.22);display:none}
+.med-panel.open{display:block}
+.med-title{color:#c5cae9;display:block;margin-bottom:3px;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em}
+.med-close{background:rgba(255,255,255,0.14);border:none;border-radius:7px;padding:3px 9px;color:#fff;font-size:0.72rem;font-weight:700;cursor:pointer;margin-top:7px;display:block}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="screens">
+
+    <!-- ═══ 0 — BEM-VINDO ═══ -->
+    <div class="screen" id="screen-0">
+      <div class="t0-card">
+        <div class="t0-em">👋</div>
+        <div class="t0-title">Olá!<br>Hoje vamos aprender</div>
+        <div style="font-size:2.8rem">📦 ➡️ 📱</div>
+        <div class="t0-sub">Como uma foto chega<br>no celular do seu amigo?</div>
+      </div>
+    </div>
+
+    <!-- ═══ 1 — FOTO NO CELULAR ═══ -->
+    <div class="screen" id="screen-1">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:100%;max-width:420px">
+        <div class="bubble">Você quer enviar<br>uma <strong>📸 foto</strong> para seu amigo!</div>
+        <span class="t1-phone" id="t1phone" onclick="t1Tap()">📱</span>
+        <div class="hint" id="t1hint">👆 Toque no celular!</div>
+        <div class="bubble" id="t1msg" style="display:none;border-color:#4caf50">✅ A foto vai viajar pela internet!</div>
+      </div>
+    </div>
+
+    <!-- ═══ 2 — FOTO CORTADA ═══ -->
+    <div class="screen" id="screen-2">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:440px">
+        <div style="font-size:1.15rem;font-weight:900;color:#880e4f;text-align:center">A foto é cortada em<br>📦 pedaços pequenos!</div>
+        <div class="cut-wrap" id="cutWrap" onclick="doCut()">
+          <div class="foto-whole" id="fotoWhole">📸</div>
+          <div class="foto-pieces" id="fotoPieces">
+            <div class="piece p1">1</div><div class="piece p2">2</div>
+            <div class="piece p3">3</div><div class="piece p4">4</div>
+          </div>
+          <div class="scissors" id="scissors">✂️</div>
+        </div>
+        <div class="hint" id="cutHint">👆 Toque na foto!</div>
+        <div class="pkt-label" id="cutLabel">✅ 4 pedaços prontos!</div>
+        <div class="bubble" style="border-color:#e91e63;background:#fce4ec;max-width:300px">
+          Cada pedacinho se chama<br><strong style="color:#880e4f;font-size:1.15rem">📦 PACOTE</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ 3 — O PACOTE TEM ENDEREÇO ═══ -->
+    <div class="screen" id="screen-3">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:100%;max-width:420px">
+        <div style="font-size:1.15rem;font-weight:900;color:#2e7d32;text-align:center">Cada 📦 tem um endereço!</div>
+        <div class="pkt-card" id="pktCard3" onclick="showPktInfo()">
+          <div class="pkt-row"><div class="pkt-ic">🏠</div><div><div class="pkt-lbl">De (quem envia)</div><div class="pkt-val">Você 👧</div></div></div>
+          <div class="pkt-row"><div class="pkt-ic">🎯</div><div><div class="pkt-lbl">Para (quem recebe)</div><div class="pkt-val">Seu amigo 👦</div></div></div>
+          <div class="pkt-row"><div class="pkt-ic">🔢</div><div><div class="pkt-lbl">Número do pedaço</div><div class="pkt-val">2 de 4</div></div></div>
+          <div class="pkt-row"><div class="pkt-ic">🖼️</div><div><div class="pkt-lbl">O que tem dentro</div><div class="pkt-val">Pedaço da foto 📸</div></div></div>
+        </div>
+        <div class="hint" id="t3hint">👆 Toque no pacote!</div>
+        <div class="pkt-glow" id="t3msg">✅ O pacote sabe para onde ir!</div>
+      </div>
+    </div>
+
+    <!-- ═══ 4 — VIAGEM ═══ -->
+    <div class="screen" id="screen-4">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:100%;max-width:460px">
+        <div style="font-size:1.15rem;font-weight:900;color:#4527a0;text-align:center">Os pacotes viajam pela internet! 🚀</div>
+        <div class="road" id="road4" onclick="startTravel()">
+          <div class="road-line"></div>
+          <div class="road-node src">👧</div>
+          <div class="road-node dst">👦</div>
+          <div id="travPkts" style="position:absolute;inset:0;pointer-events:none"></div>
+        </div>
+        <div class="hint" id="t4hint">👆 Toque na estrada!</div>
+        <div class="arrive-msg" id="t4msg"><span>🎉</span> Todos chegaram!</div>
+      </div>
+    </div>
+
+    <!-- ═══ 5 — PACOTE PERDIDO ═══ -->
+    <div class="screen" id="screen-5">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:440px">
+        <div style="font-size:1.15rem;font-weight:900;color:#e65100;text-align:center">Às vezes um pacote se perde! 😱</div>
+        <div class="lost-row">
+          <div class="lpkt lp-ok" onclick="tapLpkt(1)"><div style="font-size:1.1rem">📦</div><div>1 ✅</div></div>
+          <div class="lpkt lp-lost" id="lpkt2" onclick="tapLpkt(2)"><div style="font-size:1.1rem">📦</div><div>2 ❓</div></div>
+          <div class="lpkt lp-ok" onclick="tapLpkt(3)"><div style="font-size:1.1rem">📦</div><div>3 ✅</div></div>
+          <div class="lpkt lp-ok" onclick="tapLpkt(4)"><div style="font-size:1.1rem">📦</div><div>4 ✅</div></div>
+        </div>
+        <div class="hint" id="t5hint">👆 Toque no pacote perdido!</div>
+        <div class="lost-msg" id="t5msg">📢 O amigo pede:<br><strong>"Manda o pedaço 2 de novo!"</strong><br>E o computador reenvia! ✅</div>
+      </div>
+    </div>
+
+    <!-- ═══ 6 — REMONTAR ═══ -->
+    <div class="screen" id="screen-6">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:100%;max-width:440px">
+        <div style="font-size:1.1rem;font-weight:900;color:#006064;text-align:center">Monte a foto!<br>Coloque os pedaços em ordem 🧩</div>
+        <div class="slots-row" id="slotsRow">
+          <div class="slot" data-slot="1"><span style="opacity:0.5;font-size:0.68rem;font-weight:900;color:#0097a7">1</span></div>
+          <div class="slot" data-slot="2"><span style="opacity:0.5;font-size:0.68rem;font-weight:900;color:#0097a7">2</span></div>
+          <div class="slot" data-slot="3"><span style="opacity:0.5;font-size:0.68rem;font-weight:900;color:#0097a7">3</span></div>
+          <div class="slot" data-slot="4"><span style="opacity:0.5;font-size:0.68rem;font-weight:900;color:#0097a7">4</span></div>
+        </div>
+        <div style="font-size:0.82rem;font-weight:700;color:#0097a7">👆 Toque nos pedaços abaixo</div>
+        <div class="src-pkts" id="sourcePkts"></div>
+        <div class="assembled-msg" id="t6msg">🎉 A foto ficou pronta! 📸✨</div>
+      </div>
+    </div>
+
+    <!-- ═══ 7 — PARABÉNS ═══ -->
+    <div class="screen" id="screen-7">
+      <div class="t7-wrap">
+        <div class="firework">🎉</div>
+        <div class="stars-row"><div class="star">⭐</div><div class="star">⭐</div><div class="star">⭐</div></div>
+        <div class="congrats-title">Parabéns!<br></div>
+        <div style="font-size:2.8rem">📦 ➡️ 🚀 ➡️ 📱</div>
+        <div class="congrats-sub">A foto vira pedacinhos 📦 📦 📦 📦<br>viajam pela internet<br>e chegam juntinhas! 🎊</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         8 — ATIVIDADE 1: ARRASTAR
+         O aluno arrasta a imagem certa para a caixa
+         ═══════════════════════════════════════════ -->
+    <div class="screen" id="screen-8">
+      <div class="av-wrap">
+        <div class="av-banner">
+          <span class="av-star">⭐</span>
+          <span class="av-badge">Atividade 1 de 3</span>
+          <span class="av-pts-badge" id="av1pts"></span>
+        </div>
+        <div class="av-question">
+          <span class="av-q-em">📦</span>
+          <div class="av-q-text">O que é um <strong>pacote</strong>?</div>
+          <div class="av-q-hint">Arraste a resposta certa para a caixa! 👆</div>
+        </div>
+
+        <!-- ZONA DE SOLTAR -->
+        <div class="drop-target" id="dropTarget1">
+          <span id="dt1icon" style="font-size:2.2rem">📦</span>
+          <span class="drop-hint-lbl" id="dt1lbl">Solte aqui!</span>
+        </div>
+
+        <!-- OPÇÕES PARA ARRASTAR -->
+        <div class="drag-opts">
+          <div class="drag-opt" id="drag-a" draggable="true"
+               ontouchstart="ts(event,'drag-a')" ontouchmove="tm(event)" ontouchend="te(event,'dropTarget1','drag-a')"
+               ondragstart="ds(event,'drag-a')" ondragend="de(event)">
+            <span class="drag-em">✂️</span>
+            <span>Pedacinho dos dados</span>
+          </div>
+          <div class="drag-opt" id="drag-b" draggable="true"
+               ontouchstart="ts(event,'drag-b')" ontouchmove="tm(event)" ontouchend="te(event,'dropTarget1','drag-b')"
+               ondragstart="ds(event,'drag-b')" ondragend="de(event)">
+            <span class="drag-em">🖥️</span>
+            <span>O computador inteiro</span>
+          </div>
+          <div class="drag-opt" id="drag-c" draggable="true"
+               ontouchstart="ts(event,'drag-c')" ontouchmove="tm(event)" ontouchend="te(event,'dropTarget1','drag-c')"
+               ondragstart="ds(event,'drag-c')" ondragend="de(event)">
+            <span class="drag-em">📡</span>
+            <span>A antena do wi-fi</span>
+          </div>
+        </div>
+
+        <div class="av-fb" id="av1fb"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         9 — ATIVIDADE 2: CLICAR
+         Qual pacote se perdeu? Toque nele!
+         ═══════════════════════════════════════════ -->
+    <div class="screen" id="screen-9">
+      <div class="av-wrap">
+        <div class="av-banner">
+          <span class="av-star">⭐⭐</span>
+          <span class="av-badge">Atividade 2 de 3</span>
+          <span class="av-pts-badge" id="av2pts"></span>
+        </div>
+        <div class="av-question">
+          <span class="av-q-em">❓</span>
+          <div class="av-q-text">Um pacote se perdeu!<br>Quem pede para <strong>reenviar</strong>?</div>
+          <div class="av-q-hint">Toque na resposta certa! 👆</div>
+        </div>
+        <div class="click-opts" id="av2opts">
+          <div class="click-opt" data-correct="false" onclick="av2Click(this)">
+            <span class="co-em">👧</span><span class="co-lbl">Quem enviou</span>
+          </div>
+          <div class="click-opt" data-correct="true" onclick="av2Click(this)">
+            <span class="co-em">👦</span><span class="co-lbl">Quem recebeu</span>
+          </div>
+          <div class="click-opt" data-correct="false" onclick="av2Click(this)">
+            <span class="co-em">📡</span><span class="co-lbl">O roteador</span>
+          </div>
+        </div>
+        <div class="av-fb" id="av2fb"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         10 — ATIVIDADE 3: ARRASTAR SEQUÊNCIA
+         Arrasta os passos na ordem correta
+         ═══════════════════════════════════════════ -->
+    <div class="screen" id="screen-10">
+      <div class="av-wrap">
+        <div class="av-banner">
+          <span class="av-star">⭐⭐⭐</span>
+          <span class="av-badge">Atividade 3 de 3</span>
+          <span class="av-pts-badge" id="av3pts"></span>
+        </div>
+        <div class="av-question" style="margin-bottom:4px">
+          <div class="av-q-text">Monte a ordem certa!</div>
+          <div class="av-q-hint">Arraste cada passo para o lugar certo 👆</div>
+        </div>
+
+        <!-- SLOTS NUMERADOS -->
+        <div class="seq-slots" id="seqSlots">
+          <div class="seq-slot" id="ss1" data-slot="1"
+               ondragover="seqOver(event,'ss1')" ondragleave="seqLeave('ss1')" ondrop="seqDrop(event,'ss1')">
+            <span style="font-size:1.5rem">1️⃣</span>
+            <span class="seq-slot-num">1º passo</span>
+          </div>
+          <div class="seq-slot" id="ss2" data-slot="2"
+               ondragover="seqOver(event,'ss2')" ondragleave="seqLeave('ss2')" ondrop="seqDrop(event,'ss2')">
+            <span style="font-size:1.5rem">2️⃣</span>
+            <span class="seq-slot-num">2º passo</span>
+          </div>
+          <div class="seq-slot" id="ss3" data-slot="3"
+               ondragover="seqOver(event,'ss3')" ondragleave="seqLeave('ss3')" ondrop="seqDrop(event,'ss3')">
+            <span style="font-size:1.5rem">3️⃣</span>
+            <span class="seq-slot-num">3º passo</span>
+          </div>
+        </div>
+
+        <!-- ITENS PARA ARRASTAR (embaralhados) -->
+        <div class="seq-sources" id="seqSources"></div>
+        <div class="av-fb" id="av3fb"></div>
+      </div>
+    </div>
+
+    <!-- ═══ 11 — RESULTADO ═══ -->
+    <div class="screen" id="screen-11">
+      <div class="result-wrap" id="resultWrap"></div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <div class="next-bar">
+    <button class="btn-next hidden" id="btnNext" onclick="nextScreen()">Próximo ➡️</button>
+  </div>
+
+  <div class="footer">Material Pedagógico – Profª Adriana Bett Terebinto © 2026 — Versão Inclusiva TEA</div>
+</div>
+
+<button class="med-btn" onclick="toggleMed()">👩‍🏫</button>
+<div class="med-panel" id="medPanel">
+  <strong class="med-title">👩‍🏫 Dica para o mediador</strong>
+  <div id="medText"></div>
+  <button class="med-close" onclick="toggleMed()">Fechar ✕</button>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIGURAÇÃO
+// ══════════════════════════════════════
+const TOTAL = 12;
+let cur = 0;
+let t4Done = false;
+
+const MED = [
+  'Diga: "Hoje vamos aprender como uma foto chega no celular!" Aponte para os emojis.',
+  'Mostre um celular real. Diga: "Você já mandou foto?" Peça para tocar no celular da tela.',
+  'Faça gesto de cortar. Diga: "A foto vai ser cortada em pedacinhos!" Peça para tocar.',
+  'Aponte cada linha do pacote. Diga: "Olha, tem o nome de quem manda e de quem recebe!"',
+  'Diga: "Olha os pedacinhos viajando!" Use o dedo para simular o movimento na tela.',
+  'Aponte o pacote piscando. Diga: "Esse se perdeu! Toca nele para pedir de volta!"',
+  'Guie a mão: "1... 2... 3... 4! A foto ficou inteira!"',
+  'Comemore! Diga: "Você aprendeu! Agora vamos fazer as atividades!"',
+  'AV1: Diga "O que é um pacote?" Guie o dedo para arrastar a tesoura/pedacinho para a caixa.',
+  'AV2: Diga "O pacote se perdeu — quem pede para mandar de novo?" Aponte as três figuras.',
+  'AV3: Diga "Vamos colocar em ordem!" Guie: primeiro a foto é cortada, depois viaja, depois chega.',
+  'RESULTADO: Mostre a nota, comemore cada estrela, abrace o aluno!'
+];
+
+// ══════════════════════════════════════
+// PROGRESSO
+// ══════════════════════════════════════
+function buildProg() {
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  // aprendizado: 0-7, separador, avaliação: 8-10, resultado: 11
+  for(let i=0;i<TOTAL;i++){
+    if(i===8){
+      const sep = document.createElement('div');
+      sep.className='pb-sep'; bar.appendChild(sep);
+    }
+    const d = document.createElement('div');
+    d.className = 'pb-dot'+(i<cur?' done':i===cur?' active':'');
+    d.onclick = ()=>{ if(i<=cur) goTo(i); };
+    bar.appendChild(d);
+  }
+}
+
+function goTo(n) {
+  document.getElementById('screen-'+cur).classList.remove('active');
+  cur = n;
+  document.getElementById('screen-'+cur).classList.add('active');
+  buildProg();
+  document.getElementById('medText').textContent = MED[cur];
+  const btn = document.getElementById('btnNext');
+  // telas que precisam de ação para avançar:
+  const needsAction = [6,8,9,10,11];
+  if(needsAction.includes(cur)) btn.className='btn-next hidden';
+  else if(cur===TOTAL-1) btn.className='btn-next hidden';
+  else btn.className='btn-next';
+  // inicializar telas
+  if(cur===8) initAv1();
+  if(cur===9) initAv2();
+  if(cur===10) initAv3();
+  if(cur===11) buildResult();
+}
+
+function nextScreen(){ if(cur<TOTAL-1) goTo(cur+1); }
+
+// ══════════════════════════════════════
+// TELA 1
+// ══════════════════════════════════════
+function t1Tap(){
+  const ph=document.getElementById('t1phone');
+  ph.style.fontSize='6rem'; setTimeout(()=>ph.style.fontSize='5rem',200);
+  document.getElementById('t1hint').style.display='none';
+  document.getElementById('t1msg').style.display='block';
+  vibrate();
+}
+
+// ══════════════════════════════════════
+// TELA 2
+// ══════════════════════════════════════
+let cutDone=false;
+function doCut(){
+  if(cutDone) return; cutDone=true;
+  const sc=document.getElementById('scissors');
+  sc.style.display='block';
+  setTimeout(()=>{
+    sc.style.top='8px'; sc.style.left='44px';
+    setTimeout(()=>{
+      document.getElementById('fotoWhole').style.opacity='0';
+      document.getElementById('fotoPieces').style.opacity='1';
+      document.getElementById('cutHint').style.display='none';
+      document.getElementById('cutLabel').style.display='block';
+      sc.style.display='none';
+      document.querySelectorAll('.piece').forEach((p,i)=>{
+        p.style.transition='transform 0.4s ease';
+        p.style.transform=`translateY(${(i%2===0?-1:1)*7}px)`;
+        setTimeout(()=>p.style.transform='',600);
+      });
+    },550);
+  },80);
+  vibrate();
+}
+
+// ══════════════════════════════════════
+// TELA 3
+// ══════════════════════════════════════
+function showPktInfo(){
+  document.getElementById('t3hint').style.display='none';
+  document.getElementById('t3msg').style.display='block';
+  document.getElementById('pktCard3').style.boxShadow='0 0 0 5px rgba(76,175,80,0.4)';
+  vibrate();
+}
+
+// ══════════════════════════════════════
+// TELA 4
+// ══════════════════════════════════════
+const C4=['#ff8a65','#ffd54f','#81c784','#64b5f6'];
+function startTravel(){
+  if(t4Done) return; t4Done=true;
+  document.getElementById('t4hint').style.display='none';
+  const c=document.getElementById('travPkts');
+  c.innerHTML='';
+  const w=document.getElementById('road4').offsetWidth-70;
+  C4.forEach((col,i)=>{
+    const p=document.createElement('div');
+    p.className='tpkt'; p.style.background=col; p.style.top=(18+i*15)+'%';
+    p.textContent=i+1; c.appendChild(p);
+    setTimeout(()=>p.style.left=w+'px', i*280+80);
+  });
+  setTimeout(()=>document.getElementById('t4msg').style.display='block',2400);
+  vibrate();
+}
+
+// ══════════════════════════════════════
+// TELA 5
+// ══════════════════════════════════════
+function tapLpkt(n){
+  if(n!==2) return;
+  const el=document.getElementById('lpkt2');
+  el.className='lpkt lp-ok';
+  el.innerHTML='<div style="font-size:1.1rem">📦</div><div>2 ✅</div>';
+  document.getElementById('t5hint').style.display='none';
+  document.getElementById('t5msg').style.display='block';
+  vibrate();
+}
+
+// ══════════════════════════════════════
+// TELA 6
+// ══════════════════════════════════════
+const C6=['#ff8a65','#ffd54f','#81c784','#64b5f6'];
+const shuffled6=[3,1,4,2];
+let nextSlot6=1;
+function buildAssemble(){
+  const src=document.getElementById('sourcePkts');
+  src.innerHTML='';
+  shuffled6.forEach(n=>{
+    const p=document.createElement('div');
+    p.className='src-pkt'; p.id='spkt'+n;
+    p.style.background=C6[n-1]; p.style.borderColor=C6[n-1];
+    p.innerHTML=`<div>${n}</div><div style="font-size:0.62rem;opacity:0.8">📦</div>`;
+    p.onclick=()=>placePkt(n);
+    src.appendChild(p);
+  });
+}
+function placePkt(n){
+  if(n!==nextSlot6){
+    const el=document.getElementById('spkt'+n);
+    el.style.transform='rotate(-8deg)';
+    setTimeout(()=>el.style.transform='',280);
+    return;
+  }
+  const slot=document.querySelector(`.slot[data-slot="${n}"]`);
+  slot.classList.add('filled');
+  slot.style.background=C6[n-1]; slot.style.borderColor=C6[n-1];
+  slot.innerHTML=`<span style="font-size:1rem;font-weight:900;color:#fff">${n}</span>`;
+  document.getElementById('spkt'+n).classList.add('placed');
+  nextSlot6++; vibrate();
+  if(nextSlot6>4){
+    setTimeout(()=>{
+      document.getElementById('t6msg').style.display='block';
+      document.getElementById('btnNext').className='btn-next';
+    },350);
+  }
+}
+
+// ══════════════════════════════════════
+// VIBRAÇÃO
+// ══════════════════════════════════════
+function vibrate(){ if(navigator.vibrate) navigator.vibrate(28); }
+
+// ══════════════════════════════════════
+// MEDIADOR
+// ══════════════════════════════════════
+function toggleMed(){
+  document.getElementById('medPanel').classList.toggle('open');
+  document.getElementById('medText').textContent=MED[cur];
+}
+
+// ══════════════════════════════════════
+// PONTUAÇÃO GLOBAL
+// ══════════════════════════════════════
+let score = { av1:null, av2:null, av3:0 };
+// av1: null|bool (4pts)
+// av2: null|bool (3pts)
+// av3: 0-3       (1pt cada, máx 3pts) → total máx 10
+
+// ══════════════════════════════════════
+// AV1 — ARRASTAR
+// ══════════════════════════════════════
+let dragActive=null, tClone=null, tOX=0, tOY=0;
+const AV1_CORRECT='drag-a'; // ✂️ pedacinho
+
+function initAv1(){
+  score.av1=null;
+  ['drag-a','drag-b','drag-c'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.classList.remove('used','dragging');el.style.opacity='';}
+  });
+  const dt=document.getElementById('dropTarget1');
+  dt.className='drop-target';
+  dt.innerHTML='<span id="dt1icon" style="font-size:2.2rem">📦</span><span class="drop-hint-lbl" id="dt1lbl">Solte aqui!</span>';
+  document.getElementById('av1fb').className='av-fb';
+  document.getElementById('av1fb').textContent='';
+  document.getElementById('av1pts').textContent='';
+  document.getElementById('btnNext').className='btn-next hidden';
+  // drag-over
+  dt.ondragover=e=>{e.preventDefault();dt.classList.add('over');};
+  dt.ondragleave=()=>dt.classList.remove('over');
+  dt.ondrop=e=>{e.preventDefault();dt.classList.remove('over');dropAv1(dragActive);};
+}
+
+function ds(e,id){dragActive=id;e.target.classList.add('dragging');}
+function de(e){e.target.classList.remove('dragging');}
+
+function ts(e,id){
+  if(score.av1!==null)return;
+  dragActive=id;
+  const el=document.getElementById(id);
+  const r=el.getBoundingClientRect();
+  tOX=e.touches[0].clientX-r.left; tOY=e.touches[0].clientY-r.top;
+  tClone=el.cloneNode(true);
+  tClone.style.cssText=`position:fixed;z-index:9999;width:${r.width}px;opacity:0.85;pointer-events:none;left:${r.left}px;top:${r.top}px;border-radius:13px;`;
+  document.body.appendChild(tClone);
+  el.style.opacity='0.3';
+}
+function tm(e){
+  if(!tClone)return; e.preventDefault();
+  const t=e.touches[0];
+  tClone.style.left=(t.clientX-tOX)+'px';
+  tClone.style.top=(t.clientY-tOY)+'px';
+  const dt=document.getElementById('dropTarget1');
+  const r=dt.getBoundingClientRect();
+  dt.classList.toggle('over',t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom);
+}
+function te(e,dtId,itemId){
+  if(tClone){tClone.remove();tClone=null;}
+  const el=document.getElementById(itemId); if(el)el.style.opacity='';
+  const dt=document.getElementById(dtId); dt.classList.remove('over');
+  if(!e.changedTouches)return;
+  const t=e.changedTouches[0];
+  const r=dt.getBoundingClientRect();
+  if(t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom) dropAv1(itemId);
+}
+
+function dropAv1(id){
+  if(score.av1!==null||!id)return;
+  const ok=(id===AV1_CORRECT);
+  score.av1=ok;
+  document.getElementById(id).classList.add('used');
+  const dt=document.getElementById('dropTarget1');
+  const fb=document.getElementById('av1fb');
+  if(ok){
+    dt.className='drop-target correct';
+    dt.innerHTML='<span style="font-size:2rem">✅</span><span class="drop-hint-lbl" style="color:#1b5e20">Certo!</span>';
+    fb.className='av-fb ok'; fb.textContent='🎉 Isso! Um pacote é um pedacinho dos dados!';
+    document.getElementById('av1pts').textContent='✅ Certo! +4pts';
+  } else {
+    dt.className='drop-target wrong';
+    dt.innerHTML='<span style="font-size:2rem">❌</span><span class="drop-hint-lbl" style="color:#880e4f">Ops!</span>';
+    fb.className='av-fb err'; fb.textContent='❌ Não foi dessa vez! O pacote é o pedacinho ✂️';
+    document.getElementById('av1pts').textContent='❌ Ops!';
+  }
+  vibrate();
+  document.getElementById('btnNext').className='btn-next';
+}
+
+// ══════════════════════════════════════
+// AV2 — CLICAR
+// ══════════════════════════════════════
+function initAv2(){
+  score.av2=null;
+  document.querySelectorAll('.click-opt').forEach(el=>el.classList.remove('sel-ok','sel-err','disabled'));
+  document.getElementById('av2fb').className='av-fb'; document.getElementById('av2fb').textContent='';
+  document.getElementById('av2pts').textContent='';
+  document.getElementById('btnNext').className='btn-next hidden';
+}
+function av2Click(el){
+  if(score.av2!==null)return;
+  const ok=(el.dataset.correct==='true');
+  score.av2=ok;
+  document.querySelectorAll('.click-opt').forEach(o=>o.classList.add('disabled'));
+  el.classList.add(ok?'sel-ok':'sel-err');
+  const fb=document.getElementById('av2fb');
+  if(ok){
+    fb.className='av-fb ok'; fb.textContent='🎉 Certo! Quem recebeu percebe que falta o pedaço!';
+    document.getElementById('av2pts').textContent='✅ Certo! +3pts';
+  } else {
+    fb.className='av-fb err'; fb.textContent='❌ É quem recebeu que pede o reenvio! 👦';
+    document.getElementById('av2pts').textContent='❌ Ops!';
+    document.querySelectorAll('.click-opt[data-correct="true"]').forEach(c=>c.classList.add('sel-ok'));
+  }
+  vibrate();
+  document.getElementById('btnNext').className='btn-next';
+}
+
+// ══════════════════════════════════════
+// AV3 — ARRASTAR SEQUÊNCIA
+// ══════════════════════════════════════
+// Ordem correta: 1=✂️cortar, 2=🚀viajar, 3=📱chegar
+const SEQ_ITEMS=[
+  {id:'si-cut', em:'✂️', lbl:'Cortar a foto', correct:1, bg:'#ff8a65', border:'#e64a19'},
+  {id:'si-fly', em:'🚀', lbl:'Viajar pela internet', correct:2, bg:'#64b5f6', border:'#1565c0'},
+  {id:'si-arrive', em:'📱', lbl:'Chegar no amigo', correct:3, bg:'#81c784', border:'#2e7d32'},
+];
+// Embaralhar para exibição
+const SEQ_DISPLAY=[SEQ_ITEMS[1],SEQ_ITEMS[2],SEQ_ITEMS[0]]; // fly, arrive, cut
+let seqDragId=null, seqTC=null, seqTOX=0, seqTOY=0;
+let seqFilled={1:false,2:false,3:false};
+
+function initAv3(){
+  score.av3=0; seqFilled={1:false,2:false,3:false}; seqDragId=null;
+  // limpa slots
+  [1,2,3].forEach(n=>{
+    const sl=document.getElementById('ss'+n);
+    sl.className='seq-slot';
+    sl.innerHTML=`<span style="font-size:1.5rem">${['1️⃣','2️⃣','3️⃣'][n-1]}</span><span class="seq-slot-num">${n}º passo</span>`;
+    sl.ondragover=e=>{e.preventDefault();seqOver(e,'ss'+n);};
+    sl.ondragleave=()=>seqLeave('ss'+n);
+    sl.ondrop=e=>seqDrop(e,'ss'+n);
+  });
+  // reconstrói fontes
+  const src=document.getElementById('seqSources');
+  src.innerHTML='';
+  SEQ_DISPLAY.forEach(item=>{
+    const d=document.createElement('div');
+    d.className='seq-item'; d.id=item.id; d.draggable=true;
+    d.style.background=item.bg; d.style.borderColor=item.border;
+    d.innerHTML=`<span class="seq-em">${item.em}</span><span class="seq-lbl">${item.lbl}</span>`;
+    d.ondragstart=e=>{seqDragId=item.id;d.classList.add('dragging');};
+    d.ondragend=e=>d.classList.remove('dragging');
+    // touch
+    d.ontouchstart=e=>seqTS(e,item.id);
+    d.ontouchmove=e=>seqTM(e);
+    d.ontouchend=e=>seqTE(e,item.id);
+    src.appendChild(d);
+  });
+  document.getElementById('av3fb').className='av-fb';
+  document.getElementById('av3fb').textContent='';
+  document.getElementById('av3pts').textContent='';
+  document.getElementById('btnNext').className='btn-next hidden';
+}
+
+function seqOver(e,slId){e.preventDefault();document.getElementById(slId).classList.add('over');}
+function seqLeave(slId){document.getElementById(slId).classList.remove('over');}
+function seqDrop(e,slId){
+  e.preventDefault();
+  document.getElementById(slId).classList.remove('over');
+  handleSeqDrop(seqDragId,slId);
+}
+
+function seqTS(e,id){
+  seqDragId=id;
+  const el=document.getElementById(id);
+  const r=el.getBoundingClientRect();
+  seqTOX=e.touches[0].clientX-r.left; seqTOY=e.touches[0].clientY-r.top;
+  seqTC=el.cloneNode(true);
+  seqTC.style.cssText=`position:fixed;z-index:9999;width:${r.width}px;opacity:0.85;pointer-events:none;left:${r.left}px;top:${r.top}px;border-radius:13px;`;
+  document.body.appendChild(seqTC);
+  el.style.opacity='0.3';
+}
+function seqTM(e){
+  if(!seqTC)return; e.preventDefault();
+  const t=e.touches[0];
+  seqTC.style.left=(t.clientX-seqTOX)+'px'; seqTC.style.top=(t.clientY-seqTOY)+'px';
+  [1,2,3].forEach(n=>{
+    const sl=document.getElementById('ss'+n);
+    const r=sl.getBoundingClientRect();
+    sl.classList.toggle('over',t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom);
+  });
+}
+function seqTE(e,id){
+  if(seqTC){seqTC.remove();seqTC=null;}
+  const el=document.getElementById(id); if(el)el.style.opacity='';
+  [1,2,3].forEach(n=>document.getElementById('ss'+n).classList.remove('over'));
+  if(!e.changedTouches)return;
+  const t=e.changedTouches[0];
+  for(let n=1;n<=3;n++){
+    const sl=document.getElementById('ss'+n);
+    const r=sl.getBoundingClientRect();
+    if(t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom){
+      handleSeqDrop(id,'ss'+n); return;
+    }
+  }
+}
+
+function handleSeqDrop(itemId, slotId){
+  if(!itemId)return;
+  const slotNum=parseInt(slotId.replace('ss',''));
+  if(seqFilled[slotNum])return; // slot já ocupado
+  const item=SEQ_ITEMS.find(i=>i.id===itemId);
+  if(!item)return;
+
+  const ok=(item.correct===slotNum);
+  const sl=document.getElementById(slotId);
+  const src=document.getElementById(itemId);
+
+  if(ok){
+    seqFilled[slotNum]=true;
+    sl.className='seq-slot placed';
+    sl.innerHTML=`<span style="font-size:1.8rem">${item.em}</span><span style="font-size:0.6rem;font-weight:900;color:#fff;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:6px">${item.lbl}</span>`;
+    sl.style.background=item.bg; sl.style.borderColor=item.border;
+    if(src){src.classList.add('used');}
+    score.av3++;
+    document.getElementById('av3pts').textContent='✅'.repeat(score.av3);
+    vibrate();
+    // checar se todos colocados
+    if(score.av3===3){
+      setTimeout(()=>{
+        document.getElementById('av3fb').className='av-fb ok';
+        document.getElementById('av3fb').textContent='🎉 Perfeito! Você colocou tudo na ordem certa!';
+        document.getElementById('btnNext').className='btn-next';
+      },300);
+    }
+  } else {
+    // vibrar errado, shake no item
+    if(src){
+      src.style.transform='rotate(-7deg)';
+      setTimeout(()=>src.style.transform='',320);
+    }
+    sl.classList.add('over');
+    setTimeout(()=>sl.classList.remove('over'),320);
+    vibrate();
+  }
+  seqDragId=null;
+}
+
+// ══════════════════════════════════════
+// RESULTADO FINAL
+// ══════════════════════════════════════
+function buildResult(){
+  const pts = (score.av1===true?4:0)+(score.av2===true?3:0)+score.av3;
+  const nota = Math.min(10,pts);
+  let cor,msg,stars;
+  if(nota>=9)       {cor='#4caf50';msg='🌟 Incrível!';stars='⭐⭐⭐';}
+  else if(nota>=7)  {cor='#4caf50';msg='😊 Muito bem! Você é demais!';stars='⭐⭐⭐';}
+  else if(nota>=5)  {cor='#ff9800';msg='👍 Bom! ';stars='⭐⭐';}
+  else              {cor='#e91e63';msg='💪 Vamos tentar de novo!';stars='⭐';}
+  const corText=nota>=5?'#1b5e20':'#880e4f';
+
+  document.getElementById('resultWrap').innerHTML=`
+    <div style="font-size:2.4rem;animation:bounce 1.5s infinite">🎊</div>
+    <div class="result-nota-card" style="border-color:${cor}">
+      <div class="result-nota" style="color:${cor}">${nota}</div>
+      <div class="result-over">de 10</div>
+      <div class="result-stars">${stars}</div>
+    </div>
+    <div class="result-msg" style="color:${corText}">${msg}</div>
+    <div class="result-cards">
+      <div class="rc ${score.av1===true?'rc-ok':'rc-err'}">
+        <div class="rc-em">📦</div>
+        <div class="rc-lbl">Ativ. 1</div>
+        <div class="rc-val">${score.av1===true?'✅':'❌'}</div>
+      </div>
+      <div class="rc ${score.av2===true?'rc-ok':'rc-err'}">
+        <div class="rc-em">❓</div>
+        <div class="rc-lbl">Ativ. 2</div>
+        <div class="rc-val">${score.av2===true?'✅':'❌'}</div>
+      </div>
+      <div class="rc ${score.av3===3?'rc-ok':score.av3>0?'rc-nota':'rc-err'}">
+        <div class="rc-em">🔢</div>
+        <div class="rc-lbl">Ativ. 3</div>
+        <div class="rc-val">${score.av3}/3</div>
+      </div>
+      <div class="rc rc-nota">
+        <div class="rc-em">📊</div>
+        <div class="rc-lbl">Nota</div>
+        <div class="rc-val" style="color:${cor};font-size:1.5rem">${nota}</div>
+      </div>
+    </div>
+    <button class="btn-retry" onclick="retryAll()">🔄 Tentar de novo!</button>
+  `;
+}
+function retryAll(){
+  score={av1:null,av2:null,av3:0};
+  goTo(8);
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+buildProg();
+buildAssemble();
+goTo(0);
+</script>
+</body>
+</html>
